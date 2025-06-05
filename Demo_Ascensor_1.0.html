@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<!-- saved from url=(0053)file:///C:/Users/hecto/Desktop/Demo_Ascensor_1.0.html -->
+<html lang="es"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador de Ascensor - 3 Plantas</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+	.vl {
+            border-left: 10px solid black;
+            height: 119em;
+            position: absolute;
+            left: 50%;
+    	    margin-left: 172px;
+	}
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .main-content {
+            display: flex;
+            min-height: 600px;
+        }
+
+        .building {
+            flex: 2;
+            background: #f8f9fa;
+            position: relative;
+            border-right: 2px solid #dee2e6;
+        }
+
+        .floor {
+            height: 200px;
+            border-bottom: 3px solid #343a40;
+            position: relative;
+            display: flex;
+            align-items: center;
+            background: linear-gradient(90deg, #e9ecef 0%, #f8f9fa 100%);
+        }
+
+        .floor:last-child {
+            border-bottom: none;
+        }
+
+        .floor-number {
+            position: absolute;
+            left: 10px;
+            top: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #495057;
+            background: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .elevator-shaft {
+            width: 120px;
+            height: 600px;
+            background: #343a40;
+            position: absolute;
+            right: 150px;
+            top: 0;
+            border: 2px solid #495057;
+        }
+
+        .elevator-cabin {
+            width: 110px;
+            height: 180px;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            position: absolute;
+            right: 3px;
+            border: 2px solid #1e7e34;
+            border-radius: 8px;
+            transition: top 2s ease-in-out;
+            /* Solo animamos la posición vertical */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        .door {
+            width: 50px;
+            height: 140px;
+            background: #495057;
+            position: absolute;
+            top: 20px;
+            transition: transform 1s ease-in-out;
+            /* Solo animamos la rotación */
+            border: 1px solid #6c757d;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .door.left {
+            left: 5px;
+            transform-origin: left;
+        }
+
+        .door.right {
+            right: 5px;
+            transform-origin: right;
+        }
+
+        .door.open.left {
+            transform: rotateY(-90deg);
+        }
+
+        .door.open.right {
+            transform: rotateY(90deg);
+        }
+
+        .call-button {
+            position: absolute;
+            right: 50px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 60px;
+            height: 60px;
+            border: none;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .call-button:hover {
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .call-button.active {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: translateY(-50%) scale(1);
+            }
+
+            50% {
+                transform: translateY(-50%) scale(1.1);
+            }
+        }
+
+        .control-panel {
+            flex: 1;
+            background: #f8f9fa;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .panel-section {
+            margin-bottom: 30px;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .panel-section h3 {
+            color: #343a40;
+            margin-bottom: 15px;
+            font-size: 18px;
+            border-bottom: 2px solid #dee2e6;
+            padding-bottom: 5px;
+        }
+
+        .display {
+            width: 100px;
+            height: 100px;
+            background: #000;
+            color: #00ff00;
+            font-size: 48px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            margin: 0 auto 20px;
+            font-family: 'Courier New', monospace;
+            border: 3px solid #495057;
+            box-shadow: inset 0 0 10px rgba(0, 255, 0, 0.3);
+        }
+
+        .display.emergency {
+            color: #ff6b35;
+            /* Color naranja para la campana de emergencia */
+            animation: blink 0.5s infinite;
+        }
+
+        .display.overweight {
+            color: #dc3545;
+            /* Color rojo para sobrepeso */
+            border-color: #dc3545;
+            box-shadow: inset 0 0 10px rgba(220, 53, 69, 0.3);
+        }
+
+        @keyframes blink {
+
+            0%,
+            50% {
+                opacity: 1;
+            }
+
+            51%,
+            100% {
+                opacity: 0;
+            }
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .control-button {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-button.primary {
+            background: linear-gradient(135deg, #007bff, #0056b3);
+            color: white;
+        }
+
+        .control-button.success {
+            background: linear-gradient(135deg, #28a745, #1e7e34);
+            color: white;
+        }
+
+        .control-button.warning {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+            color: #212529;
+        }
+
+        .control-button.danger {
+            background: linear-gradient(135deg, #dc3545, #c82333);
+            color: white;
+        }
+
+        .control-button.secondary {
+            background: linear-gradient(135deg, #6c757d, #545b62);
+            color: white;
+        }
+
+        .control-button.active {
+            filter: brightness(0.7);
+        }
+
+        .led-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #6c757d;
+            display: inline-block;
+            margin-right: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .led-indicator.on {
+            background: #28a745;
+            box-shadow: 0 0 20px rgba(40, 167, 69, 0.8);
+        }
+
+        .led-indicator.emergency {
+            background: #ffc107;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.8);
+            animation: blink 0.5s infinite;
+        }
+
+        .status-info {
+            background: #e9ecef;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .status-info h4 {
+            color: #495057;
+            margin-bottom: 10px;
+        }
+
+        .status-info p {
+            margin: 5px 0;
+            color: #6c757d;
+        }
+
+        .weight-bar {
+            width: 100%;
+            height: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+
+        .weight-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #28a745, #ffc107, #dc3545);
+            width: 0%;
+            transition: all 0.5s ease;
+        }
+
+        .sensor-section {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+        }
+
+        .sensor-button {
+            padding: 10px;
+            background: #e9ecef;
+            border: 2px solid #dee2e6;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 12px;
+            text-align: center;
+        }
+
+        .sensor-button.active {
+            background: #28a745;
+            color: white;
+            border-color: #1e7e34;
+        }
+
+        .emergency-alarm {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #dc3545;
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            display: none;
+            z-index: 1000;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .emergency-alarm.show {
+            display: block;
+            animation: shake 0.5s infinite;
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            25% {
+                transform: translateX(-5px);
+            }
+
+            75% {
+                transform: translateX(5px);
+            }
+        }
+
+        .log-section {
+            max-height: 200px;
+            overflow-y: auto;
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #dee2e6;
+        }
+
+        .log-entry {
+            padding: 5px 0;
+            border-bottom: 1px solid #e9ecef;
+            font-size: 12px;
+            color: #6c757d;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .log-entry.info {
+            color: #007bff;
+        }
+
+        .log-entry.warning {
+            color: #ffc107;
+        }
+
+        .log-entry.error {
+            color: #dc3545;
+        }
+    </style>
+<style type="text/css" id="operaUserStyle"></style></head>
+
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Simulador de Ascensor - Sistema de Control PLC</h1>
+            
+        </div>
+
+        <div class="main-content">
+            <div class="building">
+                <!-- Planta 3 -->
+                <div class="floor" id="floor-3">
+                    <div class="floor-number">Planta 3</div>
+                    <button class="call-button" id="call-3" onclick="callElevator(3)">3</button>
+                </div>
+
+                <!-- Planta 2 -->
+                <div class="floor" id="floor-2">
+                    <div class="floor-number">Planta 2</div>
+                    <button class="call-button" id="call-2" onclick="callElevator(2)">2</button>
+                </div>
+
+                <!-- Planta 1 -->
+                <div class="floor" id="floor-1">
+                    <div class="floor-number">Planta 1</div>
+                    <button class="call-button" id="call-1" onclick="callElevator(1)">1</button>
+                </div>
+
+                <!-- Hueco del ascensor -->
+                <div class="elevator-shaft">
+                    <div class="elevator-cabin" id="elevator" style="top: 410px;">
+                        <div class="door left open" id="door-left"></div>
+                        <div class="door right open" id="door-right"></div>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="vl"></div>
+
+            <div class="control-panel">
+                <!-- Display -->
+                <div class="panel-section">
+                    <h3>📺 Display Informativo</h3>
+                    <div class="display" id="display">1</div>
+                </div>
+
+                <!-- Controles principales -->
+                <div class="panel-section">
+                    <h3>🎛️ Panel de Control</h3>
+                    <div class="button-grid">
+                        <button class="control-button primary" onclick="callElevator(1)">Llamar P1</button>
+                        <button class="control-button primary" onclick="callElevator(2)">Llamar P2</button>
+                        <button class="control-button primary" onclick="callElevator(3)">Llamar P3</button>
+                        <button class="control-button warning" onclick="toggleEmergencyAlarm()" id="emergency-alarm-button">Alarma</button>
+                        <button class="control-button danger" onclick="emergencyStop()" id="emergency-stop-button">Paro
+                            Emerg.</button>
+                        <button class="control-button secondary" onclick="resetSystem()">Reset</button>
+                    </div>
+
+                    <div class="button-grid">
+                        <button class="control-button success" onclick="toggleDoors()">Abrir/Cerrar</button>
+                        <button class="control-button secondary" onclick="toggleSystem()" id="system-toggle-button">Desactivar Sist.</button>
+                        <button class="control-button warning" onclick="simulateOverweight()">Sobrepeso</button>
+                    </div>
+                </div>
+
+                <!-- Indicadores LED -->
+                <div class="panel-section">
+                    <h3>💡 Indicadores LED</h3>
+                    <div style="margin-bottom: 10px;">
+                        <span class="led-indicator" id="led-1"></span>Llamada Planta 1
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span class="led-indicator" id="led-2"></span>Llamada Planta 2
+                    </div>
+                    <div style="margin-bottom: 10px;">
+                        <span class="led-indicator" id="led-3"></span>Llamada Planta 3
+                    </div>
+                    <div>
+                        <span class="led-indicator" id="led-emergency"></span>Emergencia Activa
+                    </div>
+                </div>
+
+                <!-- Sensores -->
+                <div class="panel-section">
+                    <h3>📡 Sensores (Manual Override)</h3>
+                    <div class="sensor-section">
+                        <div class="sensor-button active" id="sensor-pos-1" onclick="toggleSensor(&#39;pos-1&#39;)">Posición P1</div>
+                        <div class="sensor-button" id="sensor-pos-2" onclick="toggleSensor(&#39;pos-2&#39;)">Posición P2</div>
+                        <div class="sensor-button" id="sensor-pos-3" onclick="toggleSensor(&#39;pos-3&#39;)">Posición P3</div>
+                        <div class="sensor-button active" id="sensor-door-open" onclick="toggleSensor(&#39;door-open&#39;)">Puerta
+                            Abierta</div>
+                        <div class="sensor-button" id="sensor-door-closed" onclick="toggleSensor(&#39;door-closed&#39;)">Puerta
+                            Cerrada</div>
+                        <div class="sensor-button" id="sensor-obstruction" onclick="toggleSensor(&#39;obstruction&#39;)">
+                            Obstrucción</div>
+                    </div>
+                </div>
+
+                <!-- Peso -->
+                <div class="panel-section">
+                    <h3>⚖️ Control de Peso</h3>
+                    <p>Peso actual: <span id="weight-display">0</span> kg / <span id="max-weight-display">320</span> kg
+                    </p>
+                    <div class="weight-bar">
+                        <div class="weight-fill" id="weight-fill" style="width: 0%;"></div>
+                    </div>
+                    <input type="range" id="weight-slider" min="0" max="400" value="0" style="width: 100%; margin-top: 10px;" oninput="updateWeight(this.value)">
+                </div>
+
+                <!-- Estado del sistema -->
+                <div class="panel-section">
+                    <h3>📊 Estado del Sistema</h3>
+                    <div class="status-info">
+                        <h4>Estado Actual</h4>
+                        <p id="status-position">Posición: Planta 1</p>
+                        <p id="status-doors">Estado puertas: Abiertas</p>
+                        <p id="status-movement">Movimiento: Detenido</p>
+                        <p id="status-system">Sistema: Activo</p>
+                        <p id="status-queue">Cola de solicitudes: Vacía</p>
+                    </div>
+                </div>
+
+                <!-- Log de eventos -->
+                <div class="panel-section">
+                    <h3>📋 Log de Eventos</h3>
+                    <div class="log-section" id="log-section"><div class="log-entry info">[16:46:47] Sistema inicializado - Ascensor en Planta 1, puertas abiertas.</div><div class="log-entry info">[16:46:15] Sistema inicializado - Ascensor en Planta 1, puertas abiertas.</div><div class="log-entry info">[16:43:54] Puertas abiertas.</div><div class="log-entry info">[16:43:52] Abriendo puertas...</div><div class="log-entry info">[16:43:52] Ascensor llegó a Planta 3</div><div class="log-entry info">[16:43:50] Ascensor moviéndose de 2 a Planta 3</div><div class="log-entry info">[16:43:50] Puertas cerradas.</div><div class="log-entry info">[16:43:49] Cerrando puertas...</div><div class="log-entry info">[16:43:46] Puertas abiertas.</div><div class="log-entry info">[16:43:45] Abriendo puertas...</div><div class="log-entry info">[16:43:44] Ascensor llegó a Planta 2</div><div class="log-entry info">[16:43:43] Planta 2 insertada con prioridad en la cola: [2, 3]</div><div class="log-entry info">[16:43:43] Llamada recibida para Planta 2 (origen: exterior)</div><div class="log-entry info">[16:43:42] Ascensor moviéndose de 1 a Planta 3</div><div class="log-entry info">[16:43:42] Puertas cerradas.</div><div class="log-entry info">[16:43:41] Cerrando puertas...</div><div class="log-entry info">[16:43:41] Planta 3 añadida a la cola: [3]</div><div class="log-entry info">[16:43:41] Llamada recibida para Planta 3 (origen: exterior)</div><div class="log-entry info">[16:43:12] Sistema inicializado - Ascensor en Planta 1, puertas abiertas.</div><div class="log-entry info">[16:40:25] Puertas abiertas.</div><div class="log-entry info">[16:40:24] Abriendo puertas...</div><div class="log-entry info">[16:40:24] Ascensor llegó a Planta 1</div><div class="log-entry info">[16:40:22] Ascensor moviéndose de 2 a Planta 1</div><div class="log-entry info">[16:40:22] Puertas cerradas.</div><div class="log-entry info">[16:40:21] Cerrando puertas...</div><div class="log-entry info">[16:40:18] Puertas abiertas.</div><div class="log-entry info">[16:40:17] Planta 1 añadida a la cola: [1]</div><div class="log-entry info">[16:40:17] Llamada recibida para Planta 1 (origen: exterior)</div><div class="log-entry info">[16:40:17] Abriendo puertas...</div><div class="log-entry info">[16:40:16] Ascensor llegó a Planta 2</div><div class="log-entry info">[16:40:14] Ascensor moviéndose de 3 a Planta 2</div><div class="log-entry info">[16:40:14] Puertas cerradas.</div><div class="log-entry info">[16:40:13] Cerrando puertas...</div><div class="log-entry info">[16:40:13] Planta 2 añadida a la cola: [2]</div><div class="log-entry info">[16:40:13] Llamada recibida para Planta 2 (origen: exterior)</div><div class="log-entry info">[16:39:20] Puertas abiertas.</div><div class="log-entry info">[16:39:19] Abriendo puertas...</div><div class="log-entry info">[16:39:19] Ascensor llegó a Planta 3</div><div class="log-entry info">[16:39:17] Ascensor moviéndose de 2 a Planta 3</div><div class="log-entry info">[16:39:17] Puertas cerradas.</div><div class="log-entry info">[16:39:16] Cerrando puertas...</div><div class="log-entry info">[16:39:14] Planta 3 añadida a la cola: [3]</div><div class="log-entry info">[16:39:14] Llamada recibida para Planta 3 (origen: exterior)</div><div class="log-entry info">[16:39:13] Puertas abiertas.</div><div class="log-entry info">[16:39:12] Abriendo puertas...</div><div class="log-entry info">[16:39:12] Ascensor llegó a Planta 2</div><div class="log-entry info">[16:39:10] Ascensor moviéndose de 1 a Planta 2</div><div class="log-entry info">[16:39:10] Puertas cerradas.</div><div class="log-entry info">[16:39:09] Cerrando puertas...</div><div class="log-entry info">[16:39:09] Planta 2 añadida a la cola: [2]</div><div class="log-entry info">[16:39:09] Llamada recibida para Planta 2 (origen: exterior)</div><div class="log-entry info">[16:38:18] Puertas abiertas.</div><div class="log-entry info">[16:38:17] Abriendo puertas...</div><div class="log-entry info">[16:38:16] Ascensor llegó a Planta 1</div><div class="log-entry info">[16:38:14] Ascensor moviéndose de 2 a Planta 1</div><div class="log-entry info">[16:38:14] Puertas cerradas.</div><div class="log-entry info">[16:38:13] Cerrando puertas...</div><div class="log-entry info">[16:38:10] Puertas abiertas.</div><div class="log-entry info">[16:38:09] Abriendo puertas...</div><div class="log-entry info">[16:38:09] Ascensor llegó a Planta 2</div><div class="log-entry info">[16:38:08] Planta 2 insertada con prioridad en la cola: [2, 1]</div><div class="log-entry info">[16:38:08] Llamada recibida para Planta 2 (origen: exterior)</div><div class="log-entry info">[16:38:07] Ascensor moviéndose de 3 a Planta 1</div><div class="log-entry info">[16:38:07] Puertas cerradas.</div><div class="log-entry info">[16:38:06] Cerrando puertas...</div><div class="log-entry info">[16:38:04] Planta 1 añadida a la cola: [1]</div><div class="log-entry info">[16:38:04] Llamada recibida para Planta 1 (origen: exterior)</div><div class="log-entry info">[16:38:03] Puertas abiertas.</div><div class="log-entry info">[16:38:02] Abriendo puertas...</div><div class="log-entry info">[16:38:02] Ascensor llegó a Planta 3</div><div class="log-entry info">[16:38:00] Ascensor moviéndose de 2 a Planta 3</div><div class="log-entry info">[16:38:00] Puertas cerradas.</div><div class="log-entry info">[16:37:59] Cerrando puertas...</div><div class="log-entry info">[16:37:56] Puertas abiertas.</div><div class="log-entry info">[16:37:55] Abriendo puertas...</div><div class="log-entry info">[16:37:54] Ascensor llegó a Planta 2</div><div class="log-entry info">[16:37:53] Planta 2 insertada con prioridad en la cola: [2, 3]</div><div class="log-entry info">[16:37:53] Llamada recibida para Planta 2 (origen: exterior)</div><div class="log-entry info">[16:37:52] Ascensor moviéndose de 1 a Planta 3</div><div class="log-entry info">[16:37:52] Puertas cerradas.</div><div class="log-entry info">[16:37:51] Cerrando puertas...</div><div class="log-entry info">[16:37:51] Planta 3 añadida a la cola: [3]</div><div class="log-entry info">[16:37:51] Llamada recibida para Planta 3 (origen: exterior)</div><div class="log-entry info">[16:37:50] Sistema reiniciado. Ascensor en Planta 1, puertas ya abiertas.</div><div class="log-entry warning">[16:37:50] Iniciando reinicio del sistema...</div><div class="log-entry info">[16:37:38] Sistema reiniciado. Ascensor en Planta 1, puertas abiertas.</div><div class="log-entry info">[16:37:38] Puertas abiertas.</div><div class="log-entry info">[16:37:37] Planta 3 añadida a la cola: [3]</div><div class="log-entry info">[16:37:37] Llamada recibida para Planta 3 (origen: exterior)</div><div class="log-entry info">[16:37:37] Abriendo puertas...</div><div class="log-entry warning">[16:37:37] Iniciando reinicio del sistema...</div><div class="log-entry info">[16:37:36] Cerrando puertas...</div><div class="log-entry warning">[16:37:36] Iniciando reinicio del sistema...</div><div class="log-entry info">[16:37:36] Abriendo puertas...</div><div class="log-entry info">[16:37:36] Ascensor llegó a Planta 3</div><div class="log-entry info">[16:37:34] Planta 2 añadida a la cola: [3, 2]</div><div class="log-entry info">[16:37:34] Llamada recibida para Planta 2 (origen: exterior)</div><div class="log-entry info">[16:37:32] Ascensor moviéndose de 1 a Planta 3</div><div class="log-entry info">[16:37:32] Puertas cerradas.</div><div class="log-entry info">[16:37:31] Cerrando puertas...</div><div class="log-entry info">[16:37:31] Planta 3 añadida a la cola: [3]</div><div class="log-entry info">[16:37:31] Llamada recibida para Planta 3 (origen: exterior)</div><div class="log-entry info">[16:37:19] Puertas abiertas.</div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alarma de emergencia -->
+    <div class="emergency-alarm" id="emergency-alarm-banner">
+        🚨 ALARMA DE EMERGENCIA ACTIVADA 🚨
+    </div>
+
+    <script>
+        // Aquí guardamos todo el estado del ascensor y sensores
+        let elevatorState = {
+            currentFloor: 1,           // Planta donde está ahora
+            targetFloor: null,         // Planta a la que va
+            isMoving: false,           // True si está en movimiento
+            doorsOpen: true,           // True si las puertas están abiertas
+            systemActive: true,        // True si el sistema está encendido
+            emergencyActive: false,    // True si está sonando la alarma
+            emergencyStopActive: false,// True si el paro de emergencia está activado
+            overweight: false,         // True si hay sobrepeso
+            weight: 0,                 // Peso actual (slider)
+            maxWeight: 320,            // Peso máximo permitido
+            requestQueue: [],          // Cola de plantas solicitadas
+            pausedQueue: [],           // Cola guardada cuando se hace paro de emergencia
+            sensors: {},               // Estado de sensores (posiciones, puerta, obstrucción)
+            doorOperationTimeout: null,
+            movementTimeout: null,
+            passengerExchangeTimeout: null,
+
+            // Variables para guardar el movimiento interrumpido al hacer paro
+            movementStartTime: null,        // Momento en que comenzó a moverse
+            movementStartFloor: null,       // Planta (o fraccionaria) de origen
+            movementDestinationFloor: null, // Planta destino original
+
+            pausedDestination: null,        // Planta destino guardada durante el paro
+            pausedCurrentFloor: null        // Posición fraccionaria guardada durante el paro
+        };
+
+        // Referencias a elementos DOM que usamos varias veces
+        const displayEl = document.getElementById('display');
+        const elevatorEl = document.getElementById('elevator');
+        const doorLeftEl = document.getElementById('door-left');
+        const doorRightEl = document.getElementById('door-right');
+        const emergencyAlarmBannerEl = document.getElementById('emergency-alarm-banner');
+        const ledEmergencyEl = document.getElementById('led-emergency');
+        const weightDisplayEl = document.getElementById('weight-display');
+        const maxWeightDisplayEl = document.getElementById('max-weight-display');
+        const weightFillEl = document.getElementById('weight-fill');
+        const weightSliderEl = document.getElementById('weight-slider');
+        const logSectionEl = document.getElementById('log-section');
+        const statusPositionEl = document.getElementById('status-position');
+        const statusDoorsEl = document.getElementById('status-doors');
+        const statusMovementEl = document.getElementById('status-movement');
+        const statusSystemEl = document.getElementById('status-system');
+        const statusQueueEl = document.getElementById('status-queue');
+        const emergencyStopButtonEl = document.getElementById('emergency-stop-button');
+        const systemToggleButtonEl = document.getElementById('system-toggle-button');
+        const emergencyAlarmButtonEl = document.getElementById('emergency-alarm-button');
+
+        // Posiciones en píxeles para cada planta (aproximado)
+        const floorPositions = { 1: 410, 2: 210, 3: 10 };
+        const DOOR_TRANSITION_TIME = 1000;          // 1 segundo para abrir/cerrar puertas
+        const ELEVATOR_TRAVEL_TIME_PER_FLOOR = 2000; // 2 segundos por piso de viaje
+        const PASSENGER_EXCHANGE_TIME = 3000;       // 3 segundos de espera en cada piso
+
+        /**
+         * Borra cualquier timeout activo para puertas, movimiento o intercambio de pasajeros.
+         */
+        function clearAllTimeouts() {
+            if (elevatorState.doorOperationTimeout) clearTimeout(elevatorState.doorOperationTimeout);
+            if (elevatorState.movementTimeout) clearTimeout(elevatorState.movementTimeout);
+            if (elevatorState.passengerExchangeTimeout) clearTimeout(elevatorState.passengerExchangeTimeout);
+            elevatorState.doorOperationTimeout = null;
+            elevatorState.movementTimeout = null;
+            elevatorState.passengerExchangeTimeout = null;
+        }
+
+        /**
+         * Añade un mensaje al log de eventos, con un timestamp y clase CSS según el tipo.
+         */
+        function addLog(message, type = 'info') {
+            const logEntry = document.createElement('div');
+            logEntry.classList.add('log-entry', type);
+            const timestamp = new Date().toLocaleTimeString([], {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            logEntry.textContent = `[${timestamp}] ${message}`;
+            logSectionEl.prepend(logEntry);
+
+            // Limitar a los últimos 100 mensajes
+            if (logSectionEl.children.length > 100) {
+                logSectionEl.removeChild(logSectionEl.lastChild);
+            }
+        }
+
+        /**
+         * Actualiza el contenido del display (número de planta, flechas, alarma o sobrepeso).
+         */
+        function updateDisplay() {
+            if (elevatorState.emergencyActive) {
+                // Mostrar campana de emergencia
+                displayEl.textContent = '🔔';
+                displayEl.classList.add('emergency');
+                displayEl.classList.remove('overweight');
+            } else if (elevatorState.overweight) {
+                // Mostrar signo de exclamación de sobrepeso
+                displayEl.textContent = '!';
+                displayEl.classList.add('overweight');
+                displayEl.classList.remove('emergency');
+            } else if (elevatorState.isMoving && elevatorState.targetFloor !== null) {
+                // Mostrar flecha con destino
+                const direction = elevatorState.targetFloor > elevatorState.currentFloor ? '↑' : '↓';
+                displayEl.textContent = direction + elevatorState.targetFloor;
+                displayEl.classList.remove('emergency', 'overweight');
+            } else {
+                // Mostrar planta actual
+                displayEl.textContent = elevatorState.currentFloor.toString();
+                displayEl.classList.remove('emergency', 'overweight');
+            }
+        }
+
+        /**
+         * Actualiza los textos en la sección de estado: posición, puertas, movimiento, sistema y cola.
+         * También cambia el estilo de los botones de paro o alarma si están activos.
+         */
+        function updateStatus() {
+            // Mostrar planta actual
+            statusPositionEl.textContent = `Posición: Planta ${elevatorState.currentFloor}`;
+
+            // Indicar si las puertas están abiertas o cerradas
+            statusDoorsEl.textContent = `Estado puertas: ${elevatorState.doorsOpen
+                ? 'Abiertas'
+                : elevatorState.sensors['door-closed']
+                    ? 'Cerradas'
+                    : 'Cerrando/Abriendo'
+                }`;
+
+            // Indicar si se mueve y hacia dónde
+            statusMovementEl.textContent = `Movimiento: ${elevatorState.isMoving
+                ? (elevatorState.targetFloor > elevatorState.currentFloor
+                    ? `Subiendo a ${elevatorState.targetFloor}`
+                    : `Bajando a ${elevatorState.targetFloor}`)
+                : 'Detenido'
+                }`;
+
+            // Mostrar si el sistema está activo o no
+            statusSystemEl.textContent = `Sistema: ${elevatorState.systemActive ? 'Activo' : 'Desactivado'
+                }`;
+            systemToggleButtonEl.textContent = elevatorState.systemActive ? 'Desactivar Sist.' : 'Activar Sist.';
+            systemToggleButtonEl.classList.toggle('danger', !elevatorState.systemActive);
+
+            // Mostrar la cola de solicitudes
+            statusQueueEl.textContent = `Cola de solicitudes: ${elevatorState.requestQueue.length > 0
+                ? elevatorState.requestQueue.join(', ')
+                : 'Vacía'
+                }`;
+
+            // Cambiar estilo del botón de paro si está activo
+            emergencyStopButtonEl.classList.toggle('active', elevatorState.emergencyStopActive);
+            // Cambiar estilo del botón de alarma si está activo
+            emergencyAlarmButtonEl.classList.toggle('active', elevatorState.emergencyActive);
+            // Encender o apagar el LED de emergencia
+            if (elevatorState.emergencyActive) {
+                ledEmergencyEl.classList.add('emergency');
+            } else {
+                ledEmergencyEl.classList.remove('emergency');
+            }
+
+            updateDisplay(); // Actualiza también el display
+        }
+
+        /**
+         * Actualiza la apariencia de los sensores manuales en la interfaz.
+         */
+        function updateSensorVisuals() {
+            for (const sensorId in elevatorState.sensors) {
+                const sensorEl = document.getElementById(`sensor-${sensorId}`);
+                if (sensorEl) {
+                    sensorEl.classList.toggle('active', elevatorState.sensors[sensorId]);
+                }
+            }
+        }
+
+        /**
+         * Enciende el sensor de posición según la planta actual
+         * (solo uno puede estar encendido a la vez).
+         */
+        function updatePositionSensorLogic(currentFloor) {
+            elevatorState.sensors['pos-1'] = (currentFloor === 1);
+            elevatorState.sensors['pos-2'] = (currentFloor === 2);
+            elevatorState.sensors['pos-3'] = (currentFloor === 3);
+            updateSensorVisuals();
+        }
+
+        // ------------------------------------------------------------
+        // Cuando la página carga por primera vez, inicializamos todo.
+        // ------------------------------------------------------------
+        document.addEventListener('DOMContentLoaded', function () {
+            // Colocamos la cabina en la planta inicial (1)
+            elevatorEl.style.top = floorPositions[elevatorState.currentFloor] + 'px';
+            maxWeightDisplayEl.textContent = elevatorState.maxWeight;
+
+            // Si las puertas deben empezar abiertas, las abrimos
+            if (elevatorState.doorsOpen) {
+                doorLeftEl.classList.add('open');
+                doorRightEl.classList.add('open');
+            }
+
+            // Activamos el sensor de posición 1 (estamos en planta 1)
+            updatePositionSensorLogic(elevatorState.currentFloor);
+            // Mostramos el estado en pantalla
+            updateStatus();
+            updateSensorVisuals();
+
+            // Primer mensaje en el log
+            addLog('Sistema inicializado - Ascensor en Planta 1, puertas abiertas.');
+        });
+
+        // ----------------------------------------
+        // Funciones de llamada y movimiento del ascensor
+        // ----------------------------------------
+
+        /**
+         * Se ejecuta cuando alguien pulsa el botón de llamada (externo o desde el panel).
+         * floor = número de planta solicitada.
+         */
+        function callElevator(floor) {
+            addLog(
+                `Llamada recibida para Planta ${floor} (origen: ${event?.target?.classList?.contains('call-button') ? 'exterior' : 'panel'
+                })`,
+                'info'
+            );
+
+            // 1) Verificaciones básicas
+            if (!elevatorState.systemActive) {
+                addLog('Sistema desactivado. No se puede procesar la solicitud.', 'warning');
+                return;
+            }
+            if (elevatorState.emergencyStopActive) {
+                addLog('Paro de emergencia activo. No se puede procesar la solicitud.', 'warning');
+                return;
+            }
+            if (elevatorState.overweight && floor !== elevatorState.currentFloor) {
+                addLog('Sobrepeso detectado. No se puede mover a otra planta.', 'warning');
+                return;
+            }
+
+            // ------------------------------------------------------------
+            // 2) Si el ascensor ya está desplazándose, calculamos su posición
+            //    “fraccionaria” (en unidades de planta) en este instante exacto.
+            // ------------------------------------------------------------
+            let posicionActualFrac = null;
+            let destino = null;
+
+            if (elevatorState.isMoving && elevatorState.targetFloor !== null) {
+                // cuánto tiempo ha pasado desde que arrancó el tramo
+                const ahora = Date.now();
+                const origenFracInicial = elevatorState.movementStartFloor;       // por ejemplo 1.0 o 1.5
+                const destinoIntInicial = elevatorState.movementDestinationFloor; // por ejemplo 3
+                const msTranscurridos = ahora - elevatorState.movementStartTime;  // milisegundos
+
+                // cuántos pisos totales quería recorrer: |3 – 1| = 2
+                const totalPisos = Math.abs(destinoIntInicial - origenFracInicial);
+                // cuánto dura ese trayecto (2 pisos × 2000 ms/piso = 4000 ms)
+                const duracionTotal = totalPisos * ELEVATOR_TRAVEL_TIME_PER_FLOOR;
+                // fracción (0→1) de cuánto ha avanzado
+                const fraction = Math.min(1, Math.max(0, msTranscurridos / duracionTotal));
+
+                // planta “fraccionaria” donde está AHORA: 
+                //   si origenFracInicial = 1.0 y destinoIntInicial = 3,
+                //   y fraction = 0.4 → 1 + (3–1)*0.4 = 1.8
+                posicionActualFrac = origenFracInicial + (destinoIntInicial - origenFracInicial) * fraction;
+                destino = destinoIntInicial;
+            }
+            else if (!elevatorState.isMoving && elevatorState.requestQueue.length) {
+                // si no está moviéndose pero hay cola, origen = piso actual (entero)
+                posicionActualFrac = elevatorState.currentFloor;
+                destino = elevatorState.requestQueue[0];
+            }
+
+            // ------------------------------------------------------------
+            // 3) Si tenemos “origenActual(frac)” y un destino, comprobamos si ‘floor’ entra en ruta
+            // ------------------------------------------------------------
+            if (posicionActualFrac !== null && destino !== null) {
+                const vaBajando = destino < posicionActualFrac;
+                const vaSubiendo = destino > posicionActualFrac;
+
+                // “floor entra en ruta” sólo si veríamos que floor queda entre origenActual y destino
+                //   - si sube, floor debe estar > origenActual y < destino
+                //   - si baja, floor debe estar < origenActual y > destino
+                const entraEnRuta =
+                    (vaSubiendo && floor > posicionActualFrac && floor < destino) ||
+                    (vaBajando && floor < posicionActualFrac && floor > destino);
+
+                if (entraEnRuta) {
+                    // — Si no estaba ya en la cola, inserto ‘floor’ al principio —
+                    if (!elevatorState.requestQueue.includes(floor)) {
+                        elevatorState.requestQueue.unshift(floor);
+                        addLog(
+                            `Planta ${floor} insertada con prioridad en la cola: [${elevatorState.requestQueue.join(', ')}]`,
+                            'info'
+                        );
+                    }
+
+                    // — Encender LED y botón naranja —
+                    document.getElementById(`led-${floor}`)?.classList.add('on');
+                    document.getElementById(`call-${floor}`)?.classList.add('active');
+
+                    // Si aún no había empezado a moverse (p. ej. está cerrando puertas), 
+                    // basta con actualizar estado y salir; luego processRequest() usará esta cola.
+                    if (!elevatorState.isMoving) {
+                        updateStatus();
+                        return;
+                    }
+
+                    // — Si ya se estaba moviendo, interrumpimos la animación actual —
+                    clearTimeout(elevatorState.movementTimeout);
+                    elevatorState.movementTimeout = null;
+
+                    // Ahora “congelamos” la cabina en la posición CSS correcta según posicionActualFrac:
+                    // Convertimos la planta fraccionaria a píxeles sin depender de floorPositions[x] con x entero.
+                    // Para ello, interpolamos píxeles entre el píxel de la planta pisoInferior y pisoSuperior.
+                    const pisoInferior = Math.floor(posicionActualFrac);      // ej. si es 1.8 → pisoInferior = 1
+                    const pisoSuperior = Math.ceil(posicionActualFrac);       // ej. si es 1.8 → pisoSuperior = 2
+
+                    // píxeles en cada planta entera
+                    const pxInferior = floorPositions[pisoInferior];          // ej. floorPositions[1] = 410px
+                    const pxSuperior = floorPositions[pisoSuperior];          // ej. floorPositions[2] = 210px
+
+                    // fracción dentro del tramo (entre el inferior y el superior)
+                    const subFraction = posicionActualFrac - pisoInferior;    // ej. 1.8 – 1 = 0.8
+                    // posición en píxeles exacta:
+                    const pxActual = pxInferior + (pxSuperior - pxInferior) * subFraction;
+
+                    // Forzamos que la cabina salte a ese pxActual de golpe (sin transición):
+                    elevatorEl.style.transitionDuration = '0s';
+                    elevatorEl.style.top = `${pxActual}px`;
+                    elevatorEl.offsetHeight; // forzar reflow
+                    elevatorEl.style.transition = ''; // dejar transición normal para el siguiente tramo
+
+                    // — Recalculamos el nuevo tramo: ahora salimos de ‘posicionActualFrac’ hacia ‘floor’ —
+                    elevatorState.movementStartTime = Date.now();
+                    elevatorState.movementStartFloor = posicionActualFrac;
+                    elevatorState.movementDestinationFloor = floor;
+                    elevatorState.targetFloor = floor;
+
+                    // cuánto resta en pisos (en unidades “planta”):
+                    const distanciaEnPisos = Math.abs(floor - posicionActualFrac);
+                    const tiempoRestante = distanciaEnPisos * ELEVATOR_TRAVEL_TIME_PER_FLOOR;
+
+                    // disparamos la animación CSS para ir a “floor”:
+                    elevatorEl.style.transitionDuration = `${tiempoRestante / 1000}s`;
+                    elevatorEl.style.top = `${floorPositions[floor]}px`;
+
+                    elevatorState.movementTimeout = setTimeout(() => {
+                        arriveAtFloor(floor);
+                    }, tiempoRestante);
+
+                    updateStatus();
+                    return;
+                }
+            }
+
+            // ------------------------------------------------------------
+            // 4) Si no “entra en ruta” (o no tenía tramo iniciado), lo meto al final de la cola:
+            // ------------------------------------------------------------
+            document.getElementById(`led-${floor}`)?.classList.add('on');
+            document.getElementById(`call-${floor}`)?.classList.add('active');
+            if (!elevatorState.requestQueue.includes(floor)) {
+                if (floor === elevatorState.currentFloor && elevatorState.doorsOpen && !elevatorState.isMoving) {
+                    addLog(`Ya en Planta ${floor} con puertas abiertas.`, 'info');
+                } else {
+                    elevatorState.requestQueue.push(floor);
+                    addLog(`Planta ${floor} añadida a la cola: [${elevatorState.requestQueue.join(', ')}]`, 'info');
+                }
+            }
+
+            updateStatus();
+            processRequest();
+        }
+
+        /**
+         * Revisa la cola y decide si debe cerrar puertas o moverse a la siguiente planta.
+         */
+        function processRequest() {
+            // 1) Si se está moviendo, no hacer nada
+            // 2) Si no hay cola, no hacer nada
+            // 3) Si el sistema está inactivo o hay paro de emergencia, no hacer nada
+            if (
+                elevatorState.isMoving ||
+                elevatorState.requestQueue.length === 0 ||
+                !elevatorState.systemActive ||
+                elevatorState.emergencyStopActive
+            ) {
+                return;
+            }
+
+            // 4) Si las puertas están abiertas Y aún estamos en fase de apertura (doorOperationTimeout != null)
+            //    O en fase de espera de pasajeros (passengerExchangeTimeout != null), bloquer todo.
+            if (
+                elevatorState.doorsOpen &&
+                (elevatorState.doorOperationTimeout !== null || elevatorState.passengerExchangeTimeout !== null)
+            ) {
+                return;
+            }
+
+            // 5) Llegados aquí, las puertas están cerradas, o bien ya pasó la espera de pasajeros.
+            const nextFloor = elevatorState.requestQueue[0];
+
+            if (nextFloor === elevatorState.currentFloor) {
+                // Caso: la llamada es a la planta en la que ya estamos
+                elevatorState.requestQueue.shift(); // quitar de la cola
+                document.getElementById(`led-${nextFloor}`).classList.remove('on');
+                const callBtn = document.getElementById(`call-${nextFloor}`);
+                if (callBtn) callBtn.classList.remove('active');
+                addLog(`Atendido en Planta ${nextFloor}.`, 'info');
+
+                // Si las puertas están cerradas, abrirlas y luego esperar 5 s
+                if (!elevatorState.doorsOpen) {
+                    openDoors(() => {
+                        if (elevatorState.passengerExchangeTimeout) {
+                            clearTimeout(elevatorState.passengerExchangeTimeout);
+                        }
+                        elevatorState.passengerExchangeTimeout = setTimeout(() => {
+                            elevatorState.passengerExchangeTimeout = null;
+                            if (!elevatorState.isMoving) processRequest();
+                        }, PASSENGER_EXCHANGE_TIME);
+                    });
+                } else {
+                    // Si ya estaban abiertas, solo esperar 5 s
+                    if (elevatorState.passengerExchangeTimeout) {
+                        clearTimeout(elevatorState.passengerExchangeTimeout);
+                    }
+                    elevatorState.passengerExchangeTimeout = setTimeout(() => {
+                        elevatorState.passengerExchangeTimeout = null;
+                        if (!elevatorState.isMoving) processRequest();
+                    }, PASSENGER_EXCHANGE_TIME);
+                }
+
+                updateStatus();
+                return;
+            }
+
+            // 6) Si las puertas están abiertas (pero ya pasó el tiempo de espera), cerrarlas antes de mover
+            if (elevatorState.doorsOpen) {
+                closeDoors(() => {
+                    if (!elevatorState.doorsOpen && elevatorState.requestQueue.length) {
+                        moveToFloor(elevatorState.requestQueue[0]);
+                    }
+                });
+            } else {
+                // 7) Si puertas cerradas, mover directamente a nextFloor
+                moveToFloor(nextFloor);
+            }
+        }
+
+
+        /**
+         * Mueve la cabina hasta targetFloor. Ajusta la animación y programa el timeout.
+         */
+        function moveToFloor(targetFloor) {
+            // Si el sistema está apagado, paro activo o ya me estoy moviendo, no hago nada
+            if (!elevatorState.systemActive || elevatorState.emergencyStopActive || elevatorState.isMoving) {
+                return;
+            }
+            // Si hay sobrepeso, cancelamos el movimiento
+            if (elevatorState.overweight) {
+                addLog('Movimiento cancelado: Sobrepeso detectado.', 'error');
+                return;
+            }
+
+            // Guardamos datos del momento en que empieza a moverse
+            elevatorState.movementStartTime = Date.now();
+            elevatorState.movementStartFloor = elevatorState.currentFloor;
+            elevatorState.movementDestinationFloor = targetFloor;
+
+            elevatorState.isMoving = true;
+            elevatorState.targetFloor = targetFloor;
+
+            addLog(`Ascensor moviéndose de ${elevatorState.currentFloor} a Planta ${targetFloor}`, 'info');
+            updateStatus();
+
+            // Ajustamos la cabina en CSS para que vaya a la posición del target
+            elevatorEl.style.top = floorPositions[targetFloor] + 'px';
+            const travelDuration = Math.abs(targetFloor - elevatorState.currentFloor) * ELEVATOR_TRAVEL_TIME_PER_FLOOR;
+            elevatorEl.style.transitionDuration = `${travelDuration / 1000}s`;
+
+            // Mientras se mueve, apagamos los sensores de posición
+            updatePositionSensorLogic(null);
+
+            // Programamos el timeout para cuando termine el recorrido
+            if (elevatorState.movementTimeout) clearTimeout(elevatorState.movementTimeout);
+            elevatorState.movementTimeout = setTimeout(() => {
+                arriveAtFloor(targetFloor);
+            }, travelDuration);
+        }
+
+        /**
+         * Se llama cuando la cabina llega a una planta. Actualiza estado, abre puertas y retoma la cola.
+         */
+        function arriveAtFloor(floor) {
+            elevatorState.currentFloor = floor;
+            elevatorState.isMoving = false;
+            elevatorState.targetFloor = null;
+            elevatorEl.style.transitionDuration = ''; // Restaurar transición CSS normal
+
+            updatePositionSensorLogic(floor);
+
+            // Quitar esta planta de la cola y apagar su LED/botón
+            const index = elevatorState.requestQueue.indexOf(floor);
+            if (index > -1) elevatorState.requestQueue.splice(index, 1);
+            if (elevatorState.requestQueue[0] === floor) elevatorState.requestQueue.shift();
+
+            document.getElementById(`led-${floor}`).classList.remove('on');
+            const callButton = document.getElementById(`call-${floor}`);
+            if (callButton) callButton.classList.remove('active');
+
+            addLog(`Ascensor llegó a Planta ${floor}`, 'info');
+            updateStatus();
+
+            // Abrir puertas tras 300 ms
+            elevatorState.doorOperationTimeout = setTimeout(() => {
+                openDoors(() => {
+                    // Una vez las puertas estén completamente abiertas, esperamos 5 segundos
+                    // ANTES de volver a procesar la cola.
+                    if (elevatorState.passengerExchangeTimeout) {
+                        clearTimeout(elevatorState.passengerExchangeTimeout);
+                    }
+                    elevatorState.passengerExchangeTimeout = setTimeout(() => {
+                        // Importante: marcamos que ya finalizó la espera de pasajeros
+                        elevatorState.passengerExchangeTimeout = null;
+                        if (!elevatorState.isMoving) processRequest();
+                    }, PASSENGER_EXCHANGE_TIME);
+                });
+            }, 300);
+        }
+
+
+        /**
+         * Abre las puertas si no están abiertas ni estamos en movimiento.
+         * Al final, llama a callback (por ejemplo, para continuar con processRequest).
+         */
+        function openDoors(callback) {
+            if (elevatorState.doorsOpen || elevatorState.isMoving) {
+                if (callback) callback();
+                return;
+            }
+
+            addLog('Abriendo puertas...', 'info');
+            elevatorState.doorsOpen = true;
+            doorLeftEl.classList.add('open');
+            doorRightEl.classList.add('open');
+
+            elevatorState.sensors['door-open'] = true;
+            elevatorState.sensors['door-closed'] = false;
+            updateSensorVisuals();
+            updateStatus();
+
+            if (elevatorState.doorOperationTimeout) clearTimeout(elevatorState.doorOperationTimeout);
+            elevatorState.doorOperationTimeout = setTimeout(() => {
+                // Ya se completó la apertura → liberamos doorOperationTimeout
+                elevatorState.doorOperationTimeout = null;
+                addLog('Puertas abiertas.', 'info');
+                if (callback) callback();
+            }, DOOR_TRANSITION_TIME);
+        }
+
+
+        /**
+         * Cierra las puertas si no estamos en movimiento ni hay obstrucción.
+         * Al final, llama a callback para seguir con la cola.
+         */
+        function closeDoors(callback) {
+            if (!elevatorState.doorsOpen || elevatorState.isMoving) {
+                if (callback) callback();
+                return;
+            }
+
+            // Si hay obstrucción, volvemos a abrir
+            if (elevatorState.sensors['obstruction']) {
+                addLog('Obstrucción detectada. No se pueden cerrar puertas.', 'warning');
+                openDoors();
+                return;
+            }
+
+            addLog('Cerrando puertas...', 'info');
+            elevatorState.doorsOpen = false;
+            doorLeftEl.classList.remove('open');
+            doorRightEl.classList.remove('open');
+
+            elevatorState.sensors['door-open'] = false;
+            // Quedará “door-closed” = true tras el timeout
+            updateSensorVisuals();
+            updateStatus();
+
+            if (elevatorState.doorOperationTimeout) clearTimeout(elevatorState.doorOperationTimeout);
+            elevatorState.doorOperationTimeout = setTimeout(() => {
+                elevatorState.sensors['door-closed'] = true;
+                updateSensorVisuals();
+                addLog('Puertas cerradas.', 'info');
+                updateStatus();
+                if (callback) callback();
+            }, DOOR_TRANSITION_TIME);
+        }
+
+        /**
+         * Función para abrir o cerrar puertas manualmente desde el panel.
+         */
+        function toggleDoors() {
+            if (elevatorState.isMoving) {
+                addLog("No se pueden operar puertas mientras el ascensor está en movimiento.", "warning");
+                return;
+            }
+            if (!elevatorState.systemActive) {
+                addLog("Sistema inactivo. No se pueden operar puertas.", "warning");
+                return;
+            }
+            if (elevatorState.doorsOpen) {
+                closeDoors(() => processRequest());
+            } else {
+                openDoors();
+            }
+        }
+
+        /**
+         * Enciende/apaga solo la parte visual de la alarma (no detiene al ascensor).
+         */
+        function toggleEmergencyAlarm() {
+            elevatorState.emergencyActive = !elevatorState.emergencyActive;
+
+            if (elevatorState.emergencyActive) {
+                emergencyAlarmBannerEl.classList.add('show');
+                addLog('🚨 ALARMA DE EMERGENCIA ACTIVADA', 'error');
+            } else {
+                emergencyAlarmBannerEl.classList.remove('show');
+                addLog('Alarma de emergencia desactivada', 'info');
+            }
+            updateStatus();
+        }
+
+        /**
+         * Activa o desactiva el paro de emergencia.
+         * Al activarlo, guarda la cola y detiene todo.
+         * Al desactivarlo, restaura la cola y reanuda movimientos interrumpidos.
+         */
+        function emergencyStop() {
+            const emergencyAlarmBannerEl = document.getElementById('emergency-alarm-banner');
+
+            if (!elevatorState.emergencyStopActive) {
+                // ACTIVAR PARO DE EMERGENCIA
+                elevatorState.emergencyStopActive = true;
+
+                // Guardamos la cola actual para recuperarla luego
+                elevatorState.pausedQueue = elevatorState.requestQueue.slice();
+
+                // Si estábamos en medio de un desplazamiento, guardamos la posición exacta
+                if (elevatorState.isMoving && elevatorState.movementDestinationFloor !== null) {
+                    const now = Date.now();
+                    const origen = elevatorState.movementStartFloor;
+                    const destino = elevatorState.movementDestinationFloor;
+                    const elapsed = now - elevatorState.movementStartTime;
+                    const totalFloors = Math.abs(destino - origen);
+                    const totalDur = totalFloors * ELEVATOR_TRAVEL_TIME_PER_FLOOR;
+                    const fraction = Math.min(1, Math.max(0, elapsed / totalDur));
+                    const currentFloorFraccion = origen + (destino - origen) * fraction;
+                    elevatorState.pausedCurrentFloor = currentFloorFraccion;
+                    elevatorState.pausedDestination = destino;
+                } else {
+                    elevatorState.pausedCurrentFloor = null;
+                    elevatorState.pausedDestination = null;
+                }
+
+                // Vaciar la cola y apagar LEDs / botones de llamada
+                elevatorState.requestQueue = [];
+                for (let i = 1; i <= 3; i++) {
+                    document.getElementById(`led-${i}`).classList.remove('on');
+                    const callBtn = document.getElementById(`call-${i}`);
+                    if (callBtn) callBtn.classList.remove('active');
+                }
+
+                // Detener cualquier timeout y detener la animación
+                clearAllTimeouts();
+                elevatorState.isMoving = false;
+                elevatorState.targetFloor = null;
+
+                // Congelar la cabina donde esté
+                const computedStyle = window.getComputedStyle(elevatorEl);
+                const currentTop = computedStyle.getPropertyValue('top');
+                elevatorEl.style.transition = 'none';
+                elevatorEl.style.top = currentTop;
+                elevatorEl.offsetHeight;
+                elevatorEl.style.transition = '';
+
+
+                // ——— Ocultamos el display mientras dura el paro ———
+                displayEl.classList.add('hidden');
+
+                // Mostrar banner de paro y registrar en el log
+                elevatorState.systemActive = false;
+                emergencyAlarmBannerEl.classList.add('show');
+                addLog('🛑 PARO DE EMERGENCIA ACTIVADO. Todas las operaciones detenidas.', 'error');
+            } else {
+                // DESACTIVAR PARO DE EMERGENCIA
+                elevatorState.emergencyStopActive = false;
+                addLog('🟢 PARO DE EMERGENCIA DESACTIVADO. Reanudando operaciones previas.', 'info');
+
+                // Ocultar banner
+                emergencyAlarmBannerEl.classList.remove('show');
+
+                // ——— Volvemos a mostrar el display ———
+                displayEl.classList.remove('hidden');
+
+                // Reactivar sistema y restaurar la cola anterior
+                elevatorState.systemActive = true;
+                elevatorState.requestQueue = elevatorState.pausedQueue.slice();
+                elevatorState.pausedQueue = [];
+
+                // Volvemos a encender los LEDs y botones para cada planta pendiente
+                elevatorState.requestQueue.forEach(floor => {
+                    document.getElementById(`led-${floor}`).classList.add('on');
+                    const callBtn = document.getElementById(`call-${floor}`);
+                    if (callBtn) callBtn.classList.add('active');
+                });
+
+                // Si había un movimiento interrumpido, reanudamos desde esa posición
+                if (elevatorState.pausedCurrentFloor !== null && elevatorState.pausedDestination !== null) {
+                    elevatorState.currentFloor = elevatorState.pausedCurrentFloor;
+                    elevatorState.isMoving = true;
+
+                    const origenFrac = elevatorState.pausedCurrentFloor;
+                    const destinoInt = elevatorState.pausedDestination;
+                    elevatorState.targetFloor = destinoInt;
+                    elevatorState.movementStartFloor = origenFrac;
+                    elevatorState.movementDestinationFloor = destinoInt;
+                    elevatorState.movementStartTime = Date.now();
+
+                    const remainingFloors = Math.abs(destinoInt - origenFrac);
+                    const remainingDuration = remainingFloors * ELEVATOR_TRAVEL_TIME_PER_FLOOR;
+
+                    const elevatorEl2 = document.getElementById('elevator');
+                    const targetPx = floorPositions[destinoInt] + 'px';
+                    elevatorEl2.style.transitionDuration = (remainingDuration / 1000) + 's';
+                    requestAnimationFrame(() => {
+                        elevatorEl2.style.top = targetPx;
+                    });
+
+                    if (elevatorState.movementTimeout) clearTimeout(elevatorState.movementTimeout);
+                    elevatorState.movementTimeout = setTimeout(() => {
+                        arriveAtFloor(destinoInt);
+                    }, remainingDuration);
+
+                    // Borramos las variables de pausa ya que se reanudó
+                    elevatorState.pausedCurrentFloor = null;
+                    elevatorState.pausedDestination = null;
+                }
+
+                // Actualizamos la interfaz y retomamos la cola
+                updateStatus();
+                processRequest();
+            }
+
+            updateStatus();
+        }
+
+        /**
+         * Restablece todo el sistema: vacía cola, apaga alarmas, mueve ascensor a planta 1 y abre puertas.
+         */
+        function resetSystem() {
+            addLog('Iniciando reinicio del sistema...', 'warning');
+            clearAllTimeouts();
+
+            elevatorState.requestQueue = [];
+            elevatorState.isMoving = false;
+            elevatorState.targetFloor = null;
+            elevatorState.emergencyStopActive = false;
+            elevatorState.emergencyActive = false;
+            elevatorState.overweight = false;
+            elevatorState.systemActive = true;
+
+            weightSliderEl.value = 0;
+            updateWeight(0);
+
+            emergencyAlarmBannerEl.classList.remove('show');
+
+            // Apagamos todos los LEDs y botones de llamada
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`led-${i}`).classList.remove('on');
+                const callBtn = document.getElementById(`call-${i}`);
+                if (callBtn) callBtn.classList.remove('active');
+            }
+
+            // Asegurarnos de que el display se vea tras un reset
+            displayEl.classList.remove('hidden');
+
+            // Función interna para mover a planta 1 y abrir puertas
+            const performResetMove = () => {
+                elevatorState.currentFloor = 1;
+                elevatorEl.style.top = floorPositions[1] + 'px';
+                updatePositionSensorLogic(1);
+
+                const travelDuration = Math.abs(1 - (elevatorState.targetFloor || 1)) * ELEVATOR_TRAVEL_TIME_PER_FLOOR;
+                elevatorEl.style.transitionDuration = `${travelDuration / 1000}s`;
+
+                elevatorState.movementTimeout = setTimeout(() => {
+                    elevatorEl.style.transitionDuration = ``;
+                    if (!elevatorState.doorsOpen) {
+                        openDoors(() => {
+                            addLog('Sistema reiniciado. Ascensor en Planta 1, puertas abiertas.', 'info');
+                            updateStatus();
+                        });
+                    } else {
+                        addLog('Sistema reiniciado. Ascensor en Planta 1, puertas ya abiertas.', 'info');
+                        updateStatus();
+                    }
+                }, (elevatorState.currentFloor !== 1 || elevatorState.targetFloor !== null) ? travelDuration + 100 : 100);
+            };
+
+            // Si las puertas están abiertas y no estamos en planta 1, cerrarlas antes de mover
+            if (elevatorState.doorsOpen && elevatorState.currentFloor !== 1) {
+                closeDoors(performResetMove);
+            } else if (!elevatorState.doorsOpen && elevatorState.currentFloor !== 1) {
+                // Si las puertas ya están cerradas y no estamos en planta 1, mover directamente
+                performResetMove();
+            } else if (!elevatorState.doorsOpen && elevatorState.currentFloor === 1) {
+                // Si ya estamos en planta 1 con puertas cerradas, abrimos
+                openDoors(() => {
+                    addLog('Sistema reiniciado. Ascensor en Planta 1, puertas abiertas.', 'info');
+                    updateStatus();
+                });
+            } else {
+                // Si ya estamos en planta 1 con puertas abiertas, solo actualizamos estado
+                performResetMove();
+            }
+        }
+
+        /**
+         * Enciende o apaga todo el sistema (sin llegar a un paro de emergencia).
+         */
+        function toggleSystem() {
+            elevatorState.systemActive = !elevatorState.systemActive;
+
+            if (elevatorState.systemActive) {
+                addLog('Sistema activado.', 'info');
+                processRequest();
+            } else {
+                addLog('Sistema desactivado. Operaciones detenidas.', 'warning');
+                elevatorState.isMoving = false;
+                clearAllTimeouts();
+            }
+            updateStatus();
+        }
+
+        /**
+         * Actualiza el peso según el slider y muestra la barra de peso.
+         * Si superamos el límite, se marca sobrepeso y no permite mover.
+         */
+        function updateWeight(weightValue) {
+            const weight = parseInt(weightValue);
+            elevatorState.weight = weight;
+            const percentage = Math.min(100, (weight / elevatorState.maxWeight) * 100);
+
+            weightDisplayEl.textContent = weight;
+            weightFillEl.style.width = percentage + '%';
+
+            if (weight > elevatorState.maxWeight) {
+                if (!elevatorState.overweight) {
+                    elevatorState.overweight = true;
+                    addLog('⚠️ SOBREPESO DETECTADO. El ascensor no se moverá a otra planta.', 'error');
+                    if (elevatorState.isMoving) {
+                        addLog('Sobrepeso detectado durante movimiento. Se detendrá en el próximo piso.', 'warning');
+                    }
+                    // Si las puertas están cerradas y no nos movemos, las abrimos
+                    if (!elevatorState.doorsOpen && !elevatorState.isMoving) {
+                        openDoors();
+                    }
+                }
+            } else {
+                if (elevatorState.overweight) {
+                    elevatorState.overweight = false;
+                    addLog('Peso normalizado. Operación normal reanudada.', 'info');
+                    // Podríamos cerrar puertas y continuar, pero dejamos al usuario decidir
+                }
+            }
+            updateStatus();
+        }
+
+        /**
+         * Simula un sobrepeso moviendo el slider a un valor alto.
+         */
+        function simulateOverweight() {
+            const slider = document.getElementById('weight-slider');
+            slider.value = elevatorState.maxWeight + 30; // Ejemplo: 350 kg
+            updateWeight(slider.value);
+        }
+
+        /**
+         * Cambia manualmente el estado de un sensor para pruebas.
+         */
+        function toggleSensor(sensorId) {
+            // Solo permitimos activar sensores distintos de pos- si el sistema está activo
+            if (!elevatorState.systemActive && !sensorId.startsWith('pos-')) {
+                addLog("Sistema inactivo. Sensores (excepto posición) no pueden alterarse manualmente.", "warning");
+                return;
+            }
+
+            // Alternamos el estado del sensor
+            elevatorState.sensors[sensorId] = !elevatorState.sensors[sensorId];
+            addLog(`Sensor ${sensorId} ${elevatorState.sensors[sensorId] ? 'ACTIVADO' : 'DESACTIVADO'} manualmente.`, 'warning');
+
+            // Si es un sensor de posición, movemos la cabina ahí de golpe
+            if (sensorId.startsWith('pos-')) {
+                const floorNum = parseInt(sensorId.split('-')[1]);
+                if (elevatorState.sensors[sensorId]) {
+                    clearAllTimeouts();
+                    elevatorState.isMoving = false;
+                    elevatorState.currentFloor = floorNum;
+                    elevatorState.targetFloor = null;
+                    elevatorEl.style.transition = 'none'; // Movimiento instantáneo
+                    elevatorEl.style.top = floorPositions[floorNum] + 'px';
+                    elevatorEl.offsetHeight;
+                    elevatorEl.style.transition = '';
+                    updatePositionSensorLogic(floorNum);
+                }
+            } else if (sensorId === 'door-open') {
+                // Si forzamos puerta abierta/cerrada, ajustamos clases
+                elevatorState.sensors['door-closed'] = !elevatorState.sensors['door-open'];
+                elevatorState.doorsOpen = elevatorState.sensors['door-open'];
+                if (elevatorState.doorsOpen) {
+                    doorLeftEl.classList.add('open');
+                    doorRightEl.classList.add('open');
+                } else {
+                    doorLeftEl.classList.remove('open');
+                    doorRightEl.classList.remove('open');
+                }
+            } else if (sensorId === 'door-closed') {
+                elevatorState.sensors['door-open'] = !elevatorState.sensors['door-closed'];
+                elevatorState.doorsOpen = elevatorState.sensors['door-open'];
+                if (elevatorState.doorsOpen) {
+                    doorLeftEl.classList.add('open');
+                    doorRightEl.classList.add('open');
+                } else {
+                    doorLeftEl.classList.remove('open');
+                    doorRightEl.classList.remove('open');
+                }
+            } else if (sensorId === 'obstruction' && elevatorState.sensors['obstruction']) {
+                // Si activamos obstrucción mientras las puertas estaban cerradas o cerrándose, las reabrimos
+                if (!elevatorState.doorsOpen && !elevatorState.isMoving) {
+                    addLog('Obstrucción (manual) con puertas cerradas/cerrándose - Abriendo puertas', 'warning');
+                    openDoors();
+                }
+            }
+
+            updateSensorVisuals();
+            updateStatus();
+            processRequest(); // Revisa si hay algo más que hacer
+        }
+    </script>
+
+
+</body></html>
